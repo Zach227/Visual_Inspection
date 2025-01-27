@@ -137,10 +137,16 @@ def load_data(tag='training-set'):
         for img_path in cat_dir.glob('*.png'):
             img = Image.open(img_path.as_posix())
             #print(img_path.as_posix(), img.mode)
-            if img.mode != 'L':
-                img = ImageOps.grayscale(img)
-                img.save(img_path.as_posix())
-            arr = np.array(img)
+            # if img.mode != 'L':
+            #     img = ImageOps.grayscale(img)
+            #     img.save(img_path.as_posix())
+
+
+
+            hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+            gray_hsv = cv2.cvtColor(hsv, cv2.COLOR_BGR2GRAY)
+
+            arr = np.array(gray_hsv)
 
             #Window the array
             x, y, w, h = 70, 0, 450, 400
