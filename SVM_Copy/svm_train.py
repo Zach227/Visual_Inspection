@@ -18,7 +18,7 @@ from sklearn import preprocessing
 # SVM implementation in scikit-learn
 from sklearn.svm import LinearSVC
 
-THRESHOLD_VALUE = 180
+THRESHOLD_VALUE = 120
 
 
 plt.rcParams['font.size'] = 11
@@ -118,12 +118,13 @@ def compute_circularity(arr):
         return 0  # No contour found
 
 
+
 def load_data(tag='training-set'):
     """Load (training/test) data from the directory.
     Also do preprocessing to extra features. 
     """
     tag_dir = Path.cwd() / tag
-    # print(tag_dir)
+    print(tag_dir)
     area_vec = []
     lbp_vec = []
     circle_vec = []
@@ -133,24 +134,31 @@ def load_data(tag='training-set'):
     mean_color_vec = []
     for cat_dir in tag_dir.iterdir():
         cat_label = cat_dir.stem
-        # print(cat_label)
+        print(cat_label)
         for img_path in cat_dir.glob('*.png'):
             img = Image.open(img_path.as_posix())
             #print(img_path.as_posix(), img.mode)
             # if img.mode != 'L':
             #     img = ImageOps.grayscale(img)
             #     img.save(img_path.as_posix())
+            # arr = np.array(img)
 
+            #Window the array
+            img  = np.array(img)
+
+            bw_no_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
 
             hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
             gray_hsv = cv2.cvtColor(hsv, cv2.COLOR_BGR2GRAY)
 
-            arr = np.array(gray_hsv)
+            arr_hsv = np.array(gray_hsv)
 
-            #Window the array
+
             x, y, w, h = 70, 0, 450, 400
-            arr = arr[y:y+h, x:x+w]
+            arr_hsv = arr_hsv[y:y+h, x:x+w]
+            arr_bw = bw_no_hsv[y:y+h, x:x+w]
+
             #Feature 1 See if Skittle is round
             # feature = compute_lbp(arr)
             # edges = cv2.Canny(arr, 100, 200)
@@ -158,10 +166,10 @@ def load_data(tag='training-set'):
             # _, binary = cv2.threshold(arr, 127, 255, cv2.THRESH_BINARY)
             # contours, _ = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
             # area = cv2.contourArea(contour)
-            area, box = compute_area(arr)
+            area, box = compute_area(arr_hsv)
             
             if box and any(box):  # Check if box exists and contains non-zero values
-                skittle_box = arr[box[1]:box[3], box[0]:box[2]]
+                skittle_box = arr_bw[box[1]:box[3], box[0]:box[2]]
             else:
                 continue
                 # skittle_box = arr  # Or handle it differently based on your needs
@@ -170,12 +178,12 @@ def load_data(tag='training-set'):
             mean_color = np.mean(skittle_box)  
             mean_color = np.array([mean_color])
             area = np.array([area])
-            circle = compute_circularity(arr)
+            circle = compute_circularity(arr_hsv)
             ratio = compute_ratio(box[2] - box[0], box[3] - box[1])
             ratio = np.array([ratio])
             lbp /= np.linalg.norm(lbp, ord=1)
             # print(np.array([lbp, area]).shape)
-            # print(ratio)
+            print(ratio)
             area_vec.append(area)
             lbp_vec.append(lbp)
             circle_vec.append(circle)
@@ -184,23 +192,23 @@ def load_data(tag='training-set'):
             cat.append(cat_label)
 
 
-    # print("-----------------------------------------------")
+    print("-----------------------------------------------")
     area_array = np.array(area_vec)
     lbp_array = np.array(lbp_vec)
     circle_array = np.array(circle_vec)
     ratio_array = np.array(ratio_vec)
     mean_color_array = np.array(mean_color_vec)
-    # print(area_array.shape)
-    # print(lbp_array.shape)
+    print(area_array.shape)
+    print(lbp_array.shape)
     combined = np.hstack([lbp_array, area_array.reshape(-1,1)])
     combined = np.hstack([combined, circle_array.reshape(-1,1)])
     combined = np.hstack([combined, ratio_array.reshape(-1,1)])
     combined = np.hstack([combined, mean_color_array.reshape(-1,1)])
 
 
-    # print(combined.shape)
+    print(combined.shape)
     # print(combined)
-    # print("-----------------------------------------------")
+    print("-----------------------------------------------")
 
     return combined, cat
 
@@ -211,7 +219,7 @@ le = preprocessing.LabelEncoder()
 le.fit(cat_train)
 label_train = le.transform(cat_train)
 
-vec_test, cat_test = load_data('video_images_3')              # load test data
+vec_test, cat_test = load_data('video_images_4')              # load test data
 label_test = le.transform(cat_test)
 
 def get_conf_mat(y_pred, y_target, n_cats):

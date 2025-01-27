@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt                         # visualization module
 # color map for confusion matrix
 from matplotlib import cm
 import cv2
-THRESHOLD_VALUE = 180
+THRESHOLD_VALUE = 120
 # open source implementation of LBP
 from skimage.feature import local_binary_pattern
 # data preprocessing module in scikit-learn
@@ -120,14 +120,27 @@ def load_data(tag='training-set'):
         for img_path in cat_dir.glob('*.png'):
             img = Image.open(img_path.as_posix())
             #print(img_path.as_posix(), img.mode)
-            if img.mode != 'L':
-                img = ImageOps.grayscale(img)
-                img.save(img_path.as_posix())
-            arr = np.array(img)
+            # if img.mode != 'L':
+            #     img = ImageOps.grayscale(img)
+            #     img.save(img_path.as_posix())
+            # arr = np.array(img)
 
             #Window the array
+            img  = np.array(img)
+
+            bw_no_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+
+            hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+            gray_hsv = cv2.cvtColor(hsv, cv2.COLOR_BGR2GRAY)
+
+            arr_hsv = np.array(gray_hsv)
+
+
             x, y, w, h = 70, 0, 450, 400
-            arr = arr[y:y+h, x:x+w]
+            arr_hsv = arr_hsv[y:y+h, x:x+w]
+            arr_bw = bw_no_hsv[y:y+h, x:x+w]
+
             #Feature 1 See if Skittle is round
             # feature = compute_lbp(arr)
             # edges = cv2.Canny(arr, 100, 200)
@@ -135,10 +148,10 @@ def load_data(tag='training-set'):
             # _, binary = cv2.threshold(arr, 127, 255, cv2.THRESH_BINARY)
             # contours, _ = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
             # area = cv2.contourArea(contour)
-            area, box = compute_area(arr)
+            area, box = compute_area(arr_hsv)
             
             if box and any(box):  # Check if box exists and contains non-zero values
-                skittle_box = arr[box[1]:box[3], box[0]:box[2]]
+                skittle_box = arr_bw[box[1]:box[3], box[0]:box[2]]
             else:
                 continue
                 # skittle_box = arr  # Or handle it differently based on your needs
@@ -147,7 +160,7 @@ def load_data(tag='training-set'):
             mean_color = np.mean(skittle_box)  
             mean_color = np.array([mean_color])
             area = np.array([area])
-            circle = compute_circularity(arr)
+            circle = compute_circularity(arr_hsv)
             ratio = compute_ratio(box[2] - box[0], box[3] - box[1])
             ratio = np.array([ratio])
             lbp /= np.linalg.norm(lbp, ord=1)
@@ -182,6 +195,6 @@ def load_data(tag='training-set'):
     return combined, cat
 
 
-vec_train, cat_train = load_data('video_images_3')        # load training data
+vec_train, cat_train = load_data('video_images_4')        # load training data
 np.save("vec_train.npy", vec_train)
 np.save("cat_train.npy", cat_train)

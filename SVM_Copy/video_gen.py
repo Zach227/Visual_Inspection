@@ -10,7 +10,7 @@ print(tag_dir)
 vec = []
 cat = []
 
-video = cv2.VideoCapture("../sample_video.avi")
+video = cv2.VideoCapture("../sample_video_3.avi")
 i = 0
 while True:  
  
@@ -23,11 +23,15 @@ while True:
         # Extract the region of interest
         roi = frame[roi_y:roi_y+roi_h, roi_x:roi_x+roi_w]
         # Convert to grayscale
-        gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
+        hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
+
+        gray = cv2.cvtColor(hsv, cv2.COLOR_BGR2GRAY)
         # Apply edge detection
-        edges = cv2.Canny(gray, 100, 200)
+        # edges = cv2.Canny(gray, 100, 200)
+        _, thresholded = cv2.threshold(gray, 120, 255, cv2.THRESH_BINARY)
+
         # Find contours in the edges
-        contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        contours, _ = cv2.findContours(thresholded, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         # Initialize variables to track the largest contour
         largest_contour = None
         max_area = 0
@@ -38,11 +42,12 @@ while True:
                 max_area = area
                 largest_contour = cont
         # Draw a bounding box around the largest contour if found
+        roi = thresholded
         if largest_contour is not None:
             x, y, w, h = cv2.boundingRect(largest_contour)
-            cv2.rectangle(roi, (x, y), (x+w, y+h), (0, 255, 0), 2)  # Green rectangle with thickness 2
+            cv2.rectangle(roi, (x, y), (x+w, y+h), (255, 255, 255), 2)  # Green rectangle with thickness 2
         # Display the result
-        cv2.imshow("Largest Contour with Bounding Box", frame)
+        cv2.imshow("Largest Contour with Bounding Box", frame_copy)
         # Wait for a key press and close the window
         while True:
             key = cv2.waitKey(10) & 0xFF  # Wait slightly longer to ensure key capture
@@ -50,19 +55,19 @@ while True:
             if key == ord('q'):  # Quit the program
                 break
             elif key == ord('e'):  # Save to general folder
-                cv2.imwrite(f"./video_images_3/img{i}.png", frame_copy)
+                cv2.imwrite(f"./video_images_4/img{i}.png", frame_copy)
                 i += 1
                 break  # Exit the while loop and proceed to the next frame
             elif key == ord('g'):  # Save to 'Good' folder
-                cv2.imwrite(f"./video_images_3/Good/img{i}.png", frame_copy)
+                cv2.imwrite(f"./video_images_4/Good/img{i}.png", frame_copy)
                 i += 1
                 break  # Exit the while loop and proceed to the next frame
             elif key == ord('u'):  # Save to 'Acceptable' folder
-                cv2.imwrite(f"./video_images_3/Acceptable/img{i}.png", frame_copy)
+                cv2.imwrite(f"./video_images_4/Acceptable/img{i}.png", frame_copy)
                 i += 1
                 break  # Exit the while loop and proceed to the next frame
             elif key == ord('b'):  # Save to 'Bad' folder
-                cv2.imwrite(f"./video_images_3/Bad/img{i}.png", frame_copy)
+                cv2.imwrite(f"./video_images_4/Bad/img{i}.png", frame_copy)
                 i += 1
                 break  # Exit the while loop and proceed to the next frame
 

@@ -3,15 +3,15 @@ from pathlib import Path
 
 from pathlib import Path
 
-THRESHOLD_VALUE = 180
+THRESHOLD_VALUE = 120
 
 
 from collections import Counter
 from PIL import Image, ImageOps                                  # for image I/O
 import numpy as np                                      # N-D array module
-import matplotlib.pyplot as plt                         # visualization module
+# import matplotlib.pyplot as plt                         # visualization module
 # color map for confusion matrix
-from matplotlib import cm
+# from matplotlib import cm
 import pickle
 # open source implementation of LBP
 from skimage.feature import local_binary_pattern
@@ -21,7 +21,8 @@ from sklearn import preprocessing
 from sklearn.svm import LinearSVC
 
 
-plt.rcParams['font.size'] = 11
+import subprocess
+# plt.rcParams['font.size'] = 11
 
 # LBP function params
 radius = 3
@@ -141,24 +142,29 @@ def load_image(frame, tag='training-set'):
     # if img.mode != 'L':
     #     img = ImageOps.grayscale(img)
     #     img.save(img_path.as_posix())
-    arr = np.array(frame)
-    #make the frame black and white
+    img  = np.array(frame)
+
+    bw_no_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
 
+    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+    gray_hsv = cv2.cvtColor(hsv, cv2.COLOR_BGR2GRAY)
 
-    # arr = np.array(img)
+    arr_hsv = np.array(gray_hsv)
 
-    #Window the array
+
     x, y, w, h = 70, 0, 450, 400
-    roi = arr[y:y+h, x:x+w]
+    arr_hsv = arr_hsv[y:y+h, x:x+w]
+    arr_bw = bw_no_hsv[y:y+h, x:x+w]
+
     
 
     # _, binary = cv2.threshold(arr, 127, 255, cv2.THRESH_BINARY)
     # contours, _ = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     # area = cv2.contourArea(contour)
-    area, box = compute_area(roi)
+    area, box = compute_area(arr_hsv)
     if box and any(box):  # Check if box exists and contains non-zero values
-        skittle_box = arr[box[1]:box[3], box[0]:box[2]]
+        skittle_box = arr_bw[box[1]:box[3], box[0]:box[2]]
     else:
         return None, None
         # skittle_box = arr  # Or handle it differently based on your needs
@@ -166,7 +172,7 @@ def load_image(frame, tag='training-set'):
     # Feature 2 Use Dims for stuff
     lbp = compute_lbp(skittle_box)
     area = np.array([area])
-    circle = compute_circularity(roi)
+    circle = compute_circularity(arr_hsv)
     mean_color = np.mean(skittle_box)  
     ratio = compute_ratio(box[2] - box[0], box[3] - box[1])
 
@@ -203,6 +209,7 @@ def load_image(frame, tag='training-set'):
     # print(combined)
     # print("-----------------------------------------------")
     return combined, box
+
 
 
 
@@ -273,7 +280,7 @@ for folder in folder_paths:
             elif pred[0] == 2:
                 text = "Good"
             # if w-x * h-y > 150:
-            if ((w-x) * (h-y)) > 300:
+            if ((w-x) * (h-y)) > 150:
                 cv2.rectangle(frame, (x, y), (w, h), (0, 255, 0), 2)  # Green rectangle with thickness 2
                 cv2.putText(frame,  f"{text, pred[0]}", (x, y), cv2.FONT_HERSHEY_SIMPLEX, .9, (0, 255, 0), 2)
 
@@ -298,7 +305,7 @@ last_last_y = 400
 
 frames_without_box = 0
 
-camera = cv.VideoCapture(0)
+camera = cv2.VideoCapture(0)
 
 bash_script = "./camera_settings.sh"
 result = subprocess.run(
@@ -313,11 +320,11 @@ while True:
     if not ret:
         print(f"Bad Frame {ret}")
         break
-    roi_x, roi_y, roi_w, roi_h = 70, 0, 450, 400
+    roi_x, roi_y, roi_w, roi_h = 70, 0, 450, 300
     # roi = frame[roi_y:roi_y+roi_h, roi_x:roi_x+roi_w]
     # gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     img = Image.fromarray(frame)  # Convert NumPy array to PIL Image
-    img = ImageOps.grayscale(img)
+    # img = ImageOps.grayscale(img)
     combined, box = load_image(img)
     if box and any(box) and combined is not None and box[0] > 50: # Check if box exists and contains non-zero values
         frames_without_box = 0
@@ -343,6 +350,7 @@ while True:
 
         # print(pred)
         guesses.append(pred[0])
+        # print(pred[0])
     else:
         frames_without_box += 1
     if box is None:

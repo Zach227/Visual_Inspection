@@ -17,6 +17,7 @@ for cat_dir in tag_dir.iterdir():
         # Extract the region of interest
         roi = frame[roi_y:roi_y+roi_h, roi_x:roi_x+roi_w]
         # Convert to grayscale
+        hsv = cv2.cvtColor(hsv, cv2.COLOR_BGR2HSV)
         gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
         # Apply edge detection
 

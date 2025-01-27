@@ -3,7 +3,7 @@ from pathlib import Path
 
 from pathlib import Path
 
-THRESHOLD_VALUE = 180
+THRESHOLD_VALUE = 120
 
 
 from collections import Counter
@@ -141,24 +141,29 @@ def load_image(frame, tag='training-set'):
     # if img.mode != 'L':
     #     img = ImageOps.grayscale(img)
     #     img.save(img_path.as_posix())
-    arr = np.array(frame)
-    #make the frame black and white
+    img  = np.array(frame)
+
+    bw_no_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
 
+    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+    gray_hsv = cv2.cvtColor(hsv, cv2.COLOR_BGR2GRAY)
 
-    # arr = np.array(img)
+    arr_hsv = np.array(gray_hsv)
 
-    #Window the array
+
     x, y, w, h = 70, 0, 450, 400
-    roi = arr[y:y+h, x:x+w]
+    arr_hsv = arr_hsv[y:y+h, x:x+w]
+    arr_bw = bw_no_hsv[y:y+h, x:x+w]
+
     
 
     # _, binary = cv2.threshold(arr, 127, 255, cv2.THRESH_BINARY)
     # contours, _ = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     # area = cv2.contourArea(contour)
-    area, box = compute_area(roi)
+    area, box = compute_area(arr_hsv)
     if box and any(box):  # Check if box exists and contains non-zero values
-        skittle_box = arr[box[1]:box[3], box[0]:box[2]]
+        skittle_box = arr_bw[box[1]:box[3], box[0]:box[2]]
     else:
         return None, None
         # skittle_box = arr  # Or handle it differently based on your needs
@@ -166,7 +171,7 @@ def load_image(frame, tag='training-set'):
     # Feature 2 Use Dims for stuff
     lbp = compute_lbp(skittle_box)
     area = np.array([area])
-    circle = compute_circularity(roi)
+    circle = compute_circularity(arr_hsv)
     mean_color = np.mean(skittle_box)  
     ratio = compute_ratio(box[2] - box[0], box[3] - box[1])
 
@@ -216,7 +221,7 @@ print(tag_dir)
 vec = []
 cat = []
 
-video = cv2.VideoCapture("../sample_video.avi")
+video = cv2.VideoCapture("../sample_video_3.avi")
 
 # Load the model
 with open('linear_svc_model.pkl', 'rb') as file:
@@ -243,7 +248,7 @@ for folder in folder_paths:
         image = Image.open(image_path)
         
         # Convert the image to a NumPy array (you can use OpenCV here as well)
-        frame = np.array(image)
+        # frame = np.array(image)
         
         # Alternatively, if you prefer using OpenCV to read images as frames:
         # frame = cv2.imread(str(image_path))
@@ -256,7 +261,7 @@ for folder in folder_paths:
         roi = frame[roi_y:roi_y+roi_h, roi_x:roi_x+roi_w]
         # gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
 
-        combined, box = load_image(frame)
+        combined, box = load_image(image)
         if box and any(box) and combined is not None:  # Check if box exists and contains non-zero values
             pred = loaded_clf.predict(combined)
 
@@ -307,7 +312,7 @@ while True:
     # roi = frame[roi_y:roi_y+roi_h, roi_x:roi_x+roi_w]
     # gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     img = Image.fromarray(frame)  # Convert NumPy array to PIL Image
-    img = ImageOps.grayscale(img)
+    # img = ImageOps.grayscale(img)
     combined, box = load_image(img)
     if box and any(box) and combined is not None and box[0] > 50: # Check if box exists and contains non-zero values
         frames_without_box = 0
