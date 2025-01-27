@@ -45,12 +45,45 @@ while True:
         cv2.imshow("Largest Contour with Bounding Box", frame)
         # Wait for a key press and close the window
         while True:
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
-            elif cv2.waitKey(1) & 0xFF == ord('e'):
-                cv2.imwrite(f"./video_images/img{i}.png", frame_copy)
-                i += 1
+            key = cv2.waitKey(10) & 0xFF  # Wait slightly longer to ensure key capture
 
+            if key == ord('q'):  # Quit the program
                 break
+            elif key == ord('e'):  # Save to general folder
+                cv2.imwrite(f"./video_images_3/img{i}.png", frame_copy)
+                i += 1
+                break  # Exit the while loop and proceed to the next frame
+            elif key == ord('g'):  # Save to 'Good' folder
+                cv2.imwrite(f"./video_images_3/Good/img{i}.png", frame_copy)
+                i += 1
+                break  # Exit the while loop and proceed to the next frame
+            elif key == ord('u'):  # Save to 'Acceptable' folder
+                cv2.imwrite(f"./video_images_3/Acceptable/img{i}.png", frame_copy)
+                i += 1
+                break  # Exit the while loop and proceed to the next frame
+            elif key == ord('b'):  # Save to 'Bad' folder
+                cv2.imwrite(f"./video_images_3/Bad/img{i}.png", frame_copy)
+                i += 1
+                break  # Exit the while loop and proceed to the next frame
+
+        # while True:
+        #     if cv2.waitKey(1) & 0xFF == ord('q'):
+        #         break
+        #     elif cv2.waitKey(1) & 0xFF == ord('e'):
+        #         cv2.imwrite(f"./video_images_2/img{i}.png", frame_copy)
+        #         i += 1
+        #         break
+        #     elif cv2.waitKey(1) & 0xFF == ord('g'):
+        #         cv2.imwrite(f"./video_images_2/Good/img{i}.png", frame_copy)
+        #         i += 1
+        #         break
+        #     elif cv2.waitKey(1) & 0xFF == ord('u'):
+        #         cv2.imwrite(f"./video_images_2/Acceptable/img{i}.png", frame_copy)
+        #         i += 1
+        #         break
+        #     elif cv2.waitKey(1) & 0xFF == ord('b'):
+        #         cv2.imwrite(f"./video_images_2/Bad/img{i}.png", frame_copy)
+        #         i += 1
+        #         break
 
 cv2.destroyAllWindows()
