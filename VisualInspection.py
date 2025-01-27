@@ -68,6 +68,15 @@ fps = 25
 # Initialize video writer
 videoout = cv.VideoWriter('./sample_video.avi', cv.VideoWriter_fourcc(*'XVID'), fps, (width, height))
 
+#Camera Settings
+bash_script = "./camera_settings.sh"
+result = subprocess.run(
+    ["bash", bash_script],
+    text=True,  # To handle output as strings
+    capture_output=True,  # Captures stdout and stderr
+    check=True  # Raises exception if the command fails
+)
+
 while True:
     # Capture frame
     ret, frame = camera.read()
