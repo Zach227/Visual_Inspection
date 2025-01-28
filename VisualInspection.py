@@ -50,6 +50,7 @@
 
 import cv2 as cv
 import numpy as np
+import subprocess
 
 WEBCAM = 1  # Set to 1 for webcam
 i = 0
@@ -66,17 +67,22 @@ height = int(camera.get(cv.CAP_PROP_FRAME_HEIGHT))
 fps = 25
 
 # Initialize video writer
-videoout = cv.VideoWriter('./sample_video.avi', cv.VideoWriter_fourcc(*'XVID'), fps, (width, height))
+videoout = cv.VideoWriter('./sample_video_4.avi', cv.VideoWriter_fourcc(*'XVID'), fps, (width, height))
 
 #Camera Settings
-bash_script = "./camera_settings.sh"
-result = subprocess.run(
-    ["bash", bash_script],
-    text=True,  # To handle output as strings
-    capture_output=True,  # Captures stdout and stderr
-    check=True  # Raises exception if the command fails
-)
-
+bash_script = "./SVM_Copy/camera_settings.sh"
+try:
+    result = subprocess.run(
+        ['bash', './SVM_Copy/camera_settings.sh'],
+        check=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True
+    )
+    print("Success:", result.stdout)
+except subprocess.CalledProcessError as e:
+    print("Error:", e.stderr)
+    
 while True:
     # Capture frame
     ret, frame = camera.read()
