@@ -198,8 +198,7 @@ def load_data(tag='training-set'):
     circle_array = np.array(circle_vec)
     ratio_array = np.array(ratio_vec)
     mean_color_array = np.array(mean_color_vec)
-    print(area_array.shape)
-    print(lbp_array.shape)
+
     combined = np.hstack([lbp_array, area_array.reshape(-1,1)])
     combined = np.hstack([combined, circle_array.reshape(-1,1)])
     combined = np.hstack([combined, ratio_array.reshape(-1,1)])

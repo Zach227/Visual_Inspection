@@ -117,18 +117,32 @@ def load_data(tag='training-set'):
     mean_color_vec = []
     for cat_dir in tag_dir.iterdir():
         cat_label = cat_dir.stem
-        # print(cat_label)
         for img_path in cat_dir.glob('*.png'):
             img = Image.open(img_path.as_posix())
             #print(img_path.as_posix(), img.mode)
-            if img.mode != 'L':
-                img = ImageOps.grayscale(img)
-                img.save(img_path.as_posix())
-            arr = np.array(img)
+            # if img.mode != 'L':
+            #     img = ImageOps.grayscale(img)
+            #     img.save(img_path.as_posix())
+            # arr = np.array(img)
 
             #Window the array
+            img  = np.array(img)
+
+            bw_no_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+
+            hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+            gray_hsv = cv2.cvtColor(hsv, cv2.COLOR_BGR2GRAY)
+
+            arr_hsv = np.array(gray_hsv)
+
+
             x, y, w, h = 70, 0, 450, 400
-            arr = arr[y:y+h, x:x+w]
+            arr_hsv = arr_hsv[y:y+h, x:x+w]
+            arr_bw = bw_no_hsv[y:y+h, x:x+w]
+
+
+
             #Feature 1 See if Skittle is round
             # feature = compute_lbp(arr)
             # edges = cv2.Canny(arr, 100, 200)
@@ -136,10 +150,10 @@ def load_data(tag='training-set'):
             # _, binary = cv2.threshold(arr, 127, 255, cv2.THRESH_BINARY)
             # contours, _ = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
             # area = cv2.contourArea(contour)
-            area, box = compute_area(arr)
+            area, box = compute_area(arr_hsv)
             
             if box and any(box):  # Check if box exists and contains non-zero values
-                skittle_box = arr[box[1]:box[3], box[0]:box[2]]
+                skittle_box = arr_bw[box[1]:box[3], box[0]:box[2]]
             else:
                 continue
                 # skittle_box = arr  # Or handle it differently based on your needs
@@ -148,7 +162,7 @@ def load_data(tag='training-set'):
             mean_color = np.mean(skittle_box)  
             mean_color = np.array([mean_color])
             area = np.array([area])
-            circle = compute_circularity(arr)
+            circle = compute_circularity(arr_hsv)
             ratio = compute_ratio(box[2] - box[0], box[3] - box[1])
             ratio = np.array([ratio])
             lbp /= np.linalg.norm(lbp, ord=1)
@@ -234,7 +248,7 @@ def vis_conf_mat(conf_mat, cat_names, acc):
     plt.savefig(_filename, bbox_inches='tight')
 
 
-vec_test, cat_test = load_data('test_images_2')        # Get features for test data
+vec_test, cat_test = load_data('video_images_3')        # Get features for test data
 
 le = preprocessing.LabelEncoder()
 le.fit(cat_test)
